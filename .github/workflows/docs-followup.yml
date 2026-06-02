@@ -12,6 +12,7 @@ on:
 
 jobs:
   docs-followup:
+    if: ${{ vars.DOCS_FOLLOWUP_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Skip private reusable workflow
