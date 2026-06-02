@@ -152,38 +152,39 @@ jobs:
         needs: [source-build, debian-package, format-check]
         if: always()
         env:
-            REQUIRE_DEBIAN_PACKAGE: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) }}
-            SOURCE_BUILD_RESULT: ${{ needs['source-build'].result }}
-            DEBIAN_PACKAGE_RESULT: ${{ needs['debian-package'].result }}
-            FORMAT_CHECK_RESULT: ${{ needs['format-check'].result }}
+            REQUIRE_DEB: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) }}
         steps:
             - name: Verify required validation jobs
               shell: bash
               run: |
                   set -euo pipefail
 
-                  echo "source build: ${SOURCE_BUILD_RESULT}"
-                  echo "Debian package: ${DEBIAN_PACKAGE_RESULT}"
-                  echo "format check: ${FORMAT_CHECK_RESULT}"
+                  source_build_result="${{ needs['source-build'].result }}"
+                  debian_package_result="${{ needs['debian-package'].result }}"
+                  format_check_result="${{ needs['format-check'].result }}"
+
+                  echo "source build: ${source_build_result}"
+                  echo "Debian package: ${debian_package_result}"
+                  echo "format check: ${format_check_result}"
 
                   failed=0
 
-                  if [[ "${SOURCE_BUILD_RESULT}" != "success" ]]; then
+                  if [[ "${source_build_result}" != "success" ]]; then
                       echo "source build did not pass"
                       failed=1
                   fi
 
-                  if [[ "${FORMAT_CHECK_RESULT}" != "success" ]]; then
+                  if [[ "${format_check_result}" != "success" ]]; then
                       echo "format check did not pass"
                       failed=1
                   fi
 
-                  if [[ "${REQUIRE_DEBIAN_PACKAGE}" == "true" ]]; then
-                      if [[ "${DEBIAN_PACKAGE_RESULT}" != "success" ]]; then
+                  if [[ "${REQUIRE_DEB}" == "true" ]]; then
+                      if [[ "${debian_package_result}" != "success" ]]; then
                           echo "Debian package build did not pass"
                           failed=1
                       fi
-                  elif [[ "${DEBIAN_PACKAGE_RESULT}" != "success" && "${DEBIAN_PACKAGE_RESULT}" != "skipped" ]]; then
+                  elif [[ "${debian_package_result}" != "success" && "${debian_package_result}" != "skipped" ]]; then
                       echo "Debian package build finished with an unexpected result"
                       failed=1
                   fi
